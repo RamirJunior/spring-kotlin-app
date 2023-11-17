@@ -1,5 +1,7 @@
 package br.com.ramir.springkotlinapp.controller
 
+import br.com.ramir.springkotlinapp.model.Bank
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,17 +13,18 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class BankControllerTest {
-
-    @Autowired
-    lateinit var mockMvc: MockMvc
+class BankControllerTest @Autowired constructor(
+    val mockMvc: MockMvc,
+    val objectMapper: ObjectMapper
+) {
     val baseUrl = "/api/banks"
 
     @Nested
-    @DisplayName("getBanks()")
+    @DisplayName("GET /api/banks")
     @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBanks {
 
@@ -39,7 +42,7 @@ class BankControllerTest {
     }
 
     @Nested
-    @DisplayName("getBank()")
+    @DisplayName("GET /api/banks/{accountNumber}")
     @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBank {
 
@@ -61,14 +64,42 @@ class BankControllerTest {
     }
 
     @Test
-    fun `should retunr NOT FOUND if the account number does not exist`() {
+    fun `should return NOT FOUND if the account number does not exist`() {
         //given
         val accountNumber = "does_not_exist"
 
         // when/then
-
         mockMvc.get("$baseUrl/$accountNumber")
             .andDo { print() }
             .andExpect { status { isNotFound() } }
+    }
+
+    @Nested
+    @DisplayName("POST /api/banks")
+    @TestInstance(Lifecycle.PER_CLASS)
+    inner class PostNewBank {
+
+        @Test
+        fun `should add a new bank`() {
+            //given
+            val newBank = Bank(
+                accountNumber = "acc123",
+                trust = 45.66,
+                transactionFee = 3
+            )
+
+            //when
+            val performPostMethod = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(newBank)
+            }
+
+            // then
+            performPostMethod
+                .andDo { print() }
+                .andExpect {
+                    status { isCreated() }
+                }
+        }
     }
 }

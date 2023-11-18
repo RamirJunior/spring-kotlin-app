@@ -17,10 +17,6 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/banks")
 class BankController(private val service: BankService) {
 
-    @ExceptionHandler(NoSuchElementException::class)
-    fun handleNotFound(exception: NoSuchElementException): ResponseEntity<String> =
-        ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.message)
-
     @GetMapping
     fun getBanks(): Collection<Bank> = service.getBanks()
 
@@ -29,5 +25,5 @@ class BankController(private val service: BankService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun addBank(@RequestBody bank: Bank): Bank = bank //TODO implementation
+    fun addBank(@RequestBody bank: Bank): Bank = service.addBank(bank)
 }

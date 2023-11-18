@@ -99,6 +99,29 @@ class BankControllerTest @Autowired constructor(
                 .andDo { print() }
                 .andExpect {
                     status { isCreated() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.accountNumber") { value("acc123") }
+                    jsonPath("$.trust") { value("45.66") }
+                    jsonPath("$.transactionFee") { value("3") }
+                }
+        }
+        
+        @Test
+        fun `should return BAD REQUEST if bank with given account number already exists`() {
+            //given
+            val invalidBank = Bank("1234",1.0,2)
+            
+            //when
+            val performPost = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(invalidBank)
+            }
+
+            //then
+            performPost
+                .andDo { print() }
+                .andExpect {
+                    status { isBadRequest() }
                 }
         }
     }
